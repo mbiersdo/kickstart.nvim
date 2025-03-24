@@ -1,14 +1,58 @@
 return {
-
-  { -- Linting
+  {
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
       lint.linters_by_ft = {
+        css = { 'biomejs' },
+        scss = { 'biomejs' },
+        html = { 'htmlhint' },
+        javascript = { 'biomejs' },
         markdown = { 'markdownlint' },
+        php = { 'phpcs' },
       }
-
+      lint.linters.phpcs = {
+        name = 'phpcs',
+        cmd = '/Users/mbiersdo/.composer/vendor/bin/phpcs',
+        args = {
+          '--standard=WordPress',
+          '--report=json',
+          '-q',
+          function()
+            return '--stdin-path=' .. vim.api.nvim_buf_get_name(0)
+          end,
+          '-',
+        },
+        stdin = true,
+        ignore_exitcode = true, -- Allow non-zero exit codes to reach parser
+        parser = function(output, bufnr)
+          local diagnostics = {}
+          -- Check if output is empty or invalid
+          if not output or output == '' then
+            vim.notify('phpcs returned no output, exit code likely 2', vim.log.levels.WARN)
+            return diagnostics
+          end
+          local ok, decoded = pcall(vim.fn.json_decode, output)
+          if not ok or not decoded or not decoded.files then
+            vim.notify('phpcs parsing failed: ' .. (output or 'nil'), vim.log.levels.WARN)
+            return diagnostics
+          end
+          for file_path, data in pairs(decoded.files) do
+            for _, error in ipairs(data.messages or {}) do
+              table.insert(diagnostics, {
+                lnum = error.line - 1,
+                col = error.column - 1,
+                message = error.message or error.source or 'Unknown PHPCS error',
+                severity = error.type == 'ERROR' and vim.diagnostic.severity.ERROR or vim.diagnostic.severity.WARN,
+                source = 'phpcs',
+                code = error.source,
+              })
+            end
+          end
+          return diagnostics
+        end,
+      }
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:
       -- lint.linters_by_ft = lint.linters_by_ft or {}

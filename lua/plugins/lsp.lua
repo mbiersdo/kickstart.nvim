@@ -12,7 +12,6 @@ return {
     },
   },
   {
-    -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
@@ -218,9 +217,29 @@ return {
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
-        --
-
+        ts_ls = {
+          settings = {
+            javascript = {
+              validate = false,
+            },
+            typescript = {
+              validate = false,
+            },
+          },
+        },
+        cssls = {
+          settings = {
+            css = {
+              validate = false, -- Disable diagnostics for CSS
+            },
+            scss = {
+              validate = false, -- Disable diagnostics for SCSS
+            },
+            less = {
+              validate = false, -- Disable diagnostics for LESS
+            },
+          },
+        },
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
