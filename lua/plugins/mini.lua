@@ -16,14 +16,15 @@ return {
         end,
         desc = 'Open mini.files (cwd)',
       },
-      {
-        '<leader>fm',
-        function()
-          require('mini.files').open(LazyVim.root(), true)
-        end,
-        desc = 'Open mini.files (root)',
-      },
     },
+    config = function()
+      require('mini.files').setup {
+        windows = {
+          preview = true, -- Enable preview window
+          width_preview = 70, -- Optional: adjust preview width (default: 50)
+        },
+      }
+    end,
   },
 
   { -- Collection of various small independent plugins/modules
